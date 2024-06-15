@@ -83,6 +83,7 @@ ipython_config.py
 venv/
 ENV/
 .myenv/
+myenv/
 
 
 # Spyder project settings
