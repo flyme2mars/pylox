@@ -1,2 +1,3 @@
-hey = adf
-hoy != sdf
+// this is a comment
+(( )){} // grouping stuff
+!*+-/=<> <= == // operators

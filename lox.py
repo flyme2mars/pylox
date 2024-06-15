@@ -3,6 +3,7 @@ import os
 import io
 from Token import Token
 from typing import List
+from Scanner import Scanner
 
 had_error = False
 
@@ -50,9 +51,11 @@ def run_prompt():
 
 
 def run(source: str):
-    tokens: List[Token]
-    for item in source:
-        print(item)
+    scanner: Scanner = Scanner(source)
+    tokens: List[Token] = scanner.scan_tokens()
+
+    for token in tokens:
+        print(token)
 
 
 def error(line: int, message: str):
