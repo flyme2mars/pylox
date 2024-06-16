@@ -1,5 +1,5 @@
 from TokenType import TokenType
-from typing import List
+from typing import List, Dict
 from Token import Token
 from error import error
 
@@ -9,6 +9,24 @@ class Scanner:
     # Defining class attributes
     __source: str
     __tokens: List[Token] = list()
+    __keywords: Dict[str, TokenType] = {
+        "and": TokenType.AND,
+        "class": TokenType.CLASS,
+        "else": TokenType.ELSE,
+        "false": TokenType.FALSE,
+        "for": TokenType.FOR,
+        "fun": TokenType.FUN,
+        "if": TokenType.IF,
+        "nil": TokenType.NIL,
+        "or": TokenType.OR,
+        "print": TokenType.PRINT,
+        "return": TokenType.RETURN,
+        "super": TokenType.SUPER,
+        "this": TokenType.THIS,
+        "true": TokenType.TRUE,
+        "var": TokenType.VAR,
+        "while": TokenType.WHILE,
+    }
 
     __start: int = 0
     __current: int = 0
@@ -111,6 +129,8 @@ class Scanner:
             case _:
                 if self.is_digit(c):
                     self.number()
+                elif self.is_alpha(c):
+                    self.identifier()
                 else:
                     error(self.__line, "Unexpected character.")
 
@@ -192,3 +212,24 @@ class Scanner:
             return "\0"
         # returns the next char
         return self.__source[self.__current + 1]
+
+    # returns true if the char is a-z,A-Z,_
+    def is_alpha(self, c: str) -> bool:
+        return (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or c == "_"
+
+    # scans and add identifier to the list
+    def identifier(self):
+        # advances if the current char is alpha numeric
+        while self.is_alpha_numeric(self.peek()):
+            self.advance()
+
+        # get the text and check if it is a keyword or else it will be an identifier
+        text: str = self.__source[self.__start : self.__current]
+        type: TokenType = self.__keywords.get(text, TokenType.IDENTIFIER)
+
+        # adds token to the list
+        self.add_token(type)
+
+    # checks if the char is alpha or numeric
+    def is_alpha_numeric(self, c: str) -> bool:
+        return self.is_alpha(c) or self.is_digit(c)
