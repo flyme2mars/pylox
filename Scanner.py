@@ -18,14 +18,14 @@ class Scanner:
         # Initializing the source code to the variable
         self.__source = source
 
-    # This function returns the list of all tokens and this can be accessed in the main file.
+    # Returns list of tokens for main file access.
     def scan_tokens(self) -> List[Token]:
-        # If not in the end of source code, go through each of the char and when we complete a token, add to the list using scan_token, then put __start to the __current value
+        # Iterate through characters to create tokens using scan_token, updating __start to __current
         while not self.is_at_end():
             self.__start = self.__current
             self.scan_token()
 
-        # When it is at the end, we need to put End Of File at the end of tokens list and finally return that list
+        # Add EOF token at the end of tokens list and return the list
         new_token = Token(TokenType.EOF, "", None, self.__line)
         self.__tokens.append(new_token)
         return self.__tokens
@@ -34,7 +34,7 @@ class Scanner:
     def is_at_end(self) -> bool:
         return self.__current >= len(self.__source)
 
-    # This method is to scan every individual token and give its appropriate type and literal
+    # Scans individual tokens and assigns type and literal
     def scan_token(self) -> None:
         # We get the current character
         c: str = self.advance()
@@ -103,9 +103,16 @@ class Scanner:
             case "\n":
                 self.__line = self.__line + 1
 
+            # string literals
+            case '"':
+                self.string()
+
             # if the char is not in any of the above, call the error function
             case _:
-                error(self.__line, "Unexpected character.")
+                if self.is_digit(c):
+                    self.number()
+                else:
+                    error(self.__line, "Unexpected character.")
 
     # advances __current to the next value and returns the current char
     def advance(self) -> str:
@@ -113,13 +120,13 @@ class Scanner:
         self.__current = self.__current + 1
         return char
 
-    # takes one or two arguments, the argument for literal is optional. then adds a new token to the tokes list with appropriate type, lexeme, literal and line number
+    # Adds a new token to the tokens list with type, lexeme, literal, and line number
     def add_token(self, type: TokenType, literal=None) -> None:
         text: str = self.__source[self.__start : self.__current]
         new_token = Token(type, text, literal, self.__line)
         self.__tokens.append(new_token)
 
-    # returns true and increment __current if the current char is the expected one. returns false if it is at the end of the current char is not equal the the expected
+    # Increment __current if char matches expected, return true; otherwise, return false.
     def match(self, expected: str) -> bool:
         if self.is_at_end():
             return False
@@ -133,3 +140,55 @@ class Scanner:
         if self.is_at_end():
             return "\0"
         return self.__source[self.__current]
+
+    # scans string and add the token along with the literal value to the list
+    def string(self) -> None:
+
+        # advances till reach the end of string or file
+        while self.peek() != '"' and not self.is_at_end():
+            # update line number
+            if self.peek() == "\n":
+                self.__line = self.__line + 1
+            self.advance()
+
+        # throws error if string is not terminated
+        if self.is_at_end():
+            error(self.__line, "Unterminated string.")
+            return
+
+        # advances to the next character
+        self.advance()
+
+        # takes the literal string value and add it to the token
+        value: str = self.__source[self.__start + 1 : self.__current - 1]
+        self.add_token(TokenType.STRING, value)
+
+    # checks if the char is between 0 and 9
+    def is_digit(self, c: str) -> bool:
+        return c >= "0" and c <= "9"
+
+    def number(self) -> None:
+        # advances if the current char is digit
+        while self.is_digit(self.peek()):
+            self.advance()
+
+        # look for a fractional part
+        if self.peek() == "." and self.is_digit(self.peek_next()):
+            # Consume the "."
+            self.advance()
+
+            # advances if the current char is digit
+            while self.is_digit(self.peek()):
+                self.advance()
+        # adds float type with the literal value
+        self.add_token(
+            TokenType.NUMBER, float(self.__source[self.__start : self.__current])
+        )
+
+    # peeks at the next char
+    def peek_next(self) -> str:
+        # checks if it is end of the file
+        if self.__current + 1 >= len(self.__source):
+            return "\0"
+        # returns the next char
+        return self.__source[self.__current + 1]
