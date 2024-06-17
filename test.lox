@@ -1,7 +1,12 @@
 // this is a comment
 var name = "akshai"
 var age = 21
-
+/* hey 
+this is a block comment
+*/
 if (age >= 21) {
   
 }
+
+mul_string = "hello this is 
+a multi line string"

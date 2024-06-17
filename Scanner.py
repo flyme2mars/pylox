@@ -1,5 +1,5 @@
 from TokenType import TokenType
-from typing import List, Dict
+from typing import List, Dict, Optional
 from Token import Token
 from error import error
 
@@ -106,6 +106,14 @@ class Scanner:
                     # A comment goes until the end of the line.
                     while self.peek() != "\n" and not self.is_at_end():
                         self.advance()
+                elif self.match("*"):
+                    while (
+                        self.peek() != "*" and self.peek_next != "/"
+                    ) and not self.is_at_end():
+                        self.advance()
+                    if not self.is_at_end():
+                        self.advance()
+                        self.advance()
                 else:
                     self.add_token(TokenType.SLASH)
 
@@ -141,7 +149,7 @@ class Scanner:
         return char
 
     # Adds a new token to the tokens list with type, lexeme, literal, and line number
-    def add_token(self, type: TokenType, literal=None) -> None:
+    def add_token(self, type: TokenType, literal: Optional[str | float] = None) -> None:
         text: str = self.__source[self.__start : self.__current]
         new_token = Token(type, text, literal, self.__line)
         self.__tokens.append(new_token)
